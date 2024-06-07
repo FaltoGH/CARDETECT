@@ -1,0 +1,5 @@
+yolov8?.pt
+*.rf.*.jpg
+*.rf.*.txt
+__pycache__
+labels.cache
