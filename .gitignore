@@ -6,3 +6,4 @@ labels.cache
 train.cache
 val.cache
 *.aug.png
+*.aug.txt

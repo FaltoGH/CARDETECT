@@ -17,12 +17,40 @@ def rotate(x:float, y:float, w:float, h:float, angle:int) -> tuple:
 
     return (xcand[p], ycand[p], wcand[p], hcand[p])
 
+class Label:
+    def __init__(self, filename):
+        self.filename = filename
+        with open(filename, "r") as f:
+            self.lines = f.readlines()
+        
+    def save(self, angle:int):
+        newlines = []
+        for line in self.lines:
+
+            tokens = line.split()
+            ntok = len(tokens)
+            if ntok == 0:
+                continue
+
+            assert ntok == 5
+            
+            xywh = tuple(map(float, tokens[1:]))
+
+            newxywh = rotate(xywh[0], xywh[1], xywh[2], xywh[3], angle)
+            snewxywh = [*map(str, newxywh)]
+
+            newlines.append(tokens[0] + " " + (" ".join(snewxywh)) + "\n")
+
+        with open(self.filename[:-3] + ("%d.aug.txt"%angle), "w") as f:
+            f.writelines(newlines)
+
 dirname = os.path.dirname(__file__)
 os.chdir(dirname)
 
 dataset = os.path.join(dirname, "YOLODataset")
 images = os.path.join(dataset, "images")
 labels = os.path.join(dataset, "labels")
+
 modes = ["train", "val"]
 angles = [90, 180, 270]
 
@@ -47,7 +75,9 @@ if __name__ == "__main__":
             if org_image.width != org_image.height:
                 continue
 
+            label = Label(labelpath)
+
             for angle in angles:
                 im1 = org_image.rotate(angle)
                 im1.save(os.path.join(imdir, number_plus_dot + ("%d.aug.png" % angle)))
-
+                label.save(angle)
