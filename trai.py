@@ -17,5 +17,5 @@ from ultralytics import YOLO
 yolo=YOLO(model)
 if __name__ == "__main__":
     print(datetime.datetime.now())
-    yolo.train(task="detect",mode="train",data=datayaml,device=0,patience=2,verbose=True,epochs=10)
+    yolo.train(task="detect",mode="train",data=datayaml,device=0,patience=2,verbose=True,epochs=100)
     print(datetime.datetime.now())
