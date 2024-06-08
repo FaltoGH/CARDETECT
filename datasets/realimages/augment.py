@@ -45,7 +45,10 @@ class Label:
             f.writelines(newlines)
 
 dirname = os.path.dirname(__file__)
-os.chdir(dirname)
+try:
+    os.chdir(dirname)
+except OSError:
+    pass
 
 dataset = os.path.join(dirname, "YOLODataset")
 images = os.path.join(dataset, "images")
