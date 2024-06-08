@@ -3,3 +3,5 @@ yolov8?.pt
 *.rf.*.txt
 __pycache__
 labels.cache
+train.cache
+val.cache
