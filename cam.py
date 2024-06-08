@@ -1,10 +1,13 @@
 import os
+
 dirname = os.path.dirname(__file__)
 os.chdir(dirname)
 model=os.path.join(dirname, "runs", "detect", "train7", "weights", "best.pt")
 test=os.path.join(dirname, "realtest")
+
 if not os.path.isfile(model):
     raise FileNotFoundError(model)
+
 from ultralytics import YOLO
 import cv2
 
@@ -29,9 +32,16 @@ while cap.isOpened():
         # Display the annotated frame
         cv2.imshow("YOLOv8 Inference", annotated_frame)
 
+        wkey = cv2.waitKey(1) & 0xFF
+
         # Break the loop if 'q' is pressed
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        if wkey == ord("q"):
             break
+        
+        # Pause the loop if 'p' is pressed
+        if wkey == ord("p"):
+            cv2.waitKey(0)
+
     else:
         # Break the loop if the end of the video is reached
         break
