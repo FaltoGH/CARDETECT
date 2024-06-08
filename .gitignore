@@ -5,3 +5,4 @@ __pycache__
 labels.cache
 train.cache
 val.cache
+*.aug.png
