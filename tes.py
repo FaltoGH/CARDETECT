@@ -2,7 +2,7 @@ import os
 
 dirname = os.path.dirname(__file__)
 os.chdir(dirname)
-model=os.path.join(dirname, "runs", "detect", "train7", "weights", "best.pt")
+model=os.path.join(dirname, "runs", "detect", "thirdtrain", "weights", "best.pt")
 test=os.path.join(dirname, "images")
 
 if not os.path.isfile(model):
