@@ -7,11 +7,15 @@ test=os.path.join(dirname, "images")
 
 if not os.path.isfile(model):
     raise FileNotFoundError(model)
+
 if not os.path.isdir(test):
     raise FileNotFoundError(test)
 
-from ultralytics import YOLO
+WINNAME = "YOLOv8 Inference"
+
 import cv2
+from ultralytics import YOLO
+
 
 # Load the YOLOv8 model
 model = YOLO(model)
@@ -27,8 +31,17 @@ for im in os.listdir(test):
     # Visualize the results on the frame
     annotated_frame = result.plot()
 
+    width = annotated_frame.shape[1]
+    height = annotated_frame.shape[0]
+    print("width=%d, height=%d"%(width, height))
+
+    while width > 1800 or height > 900:
+        annotated_frame = cv2.resize(annotated_frame, (width>>1, height>>1))
+        width = annotated_frame.shape[1]
+        height = annotated_frame.shape[0]
+    
     # Display the annotated frame
-    cv2.imshow("YOLOv8 Inference", annotated_frame)
+    cv2.imshow(WINNAME, annotated_frame)
 
     # Break the loop if 'q' is pressed
     if cv2.waitKey(0) & 0xFF == ord("q"):
