@@ -27,6 +27,28 @@ Clockwise 270 result:
 - Correct: 10
 - Wrong: 11
 
+QC 9C X
+KC KC O
+9D 9D O
+QD 9D X
+10H 10H O
+7H 7H O
+6H 6H O
+AH AH O 
+10S 10S O
+JS JC X
+8S 8C X
+3D 5D X
+8H 6H X
+5D 5D O
+5H 5H O
+9H_1 9H O
+9H_2 7H X
+KD KD O
+KH_1 ? X
+KH_2 ? X
+11 of 20 are correct if angle-invariant algorithm applied.
+
 ## YOLOv8s
 ### [Experiment results](https://github.com/PD-Mera/Playing-Cards-Detection?tab=readme-ov-file#experiment-results)
 
@@ -55,6 +77,28 @@ Clockwise 270 result:
 ![image](/images/3.jpg_s_pred.jpg)
 - Correct: 14
 - Wrong: 7
+
+QC QC O
+KC KC O 
+9D 9D O
+QD 9D X
+10H 10H O
+7H 7H O
+6H 4H X
+AH AH O
+10S 10S O
+JS JS O
+8S 8S O
+3D 3D O
+8H 8H O
+5D 5D O
+5H 5H O
+9H_1 7H X
+9H_2 9H O
+KD KD O
+KH_1 KH O
+KH_2 KH O
+17 of 20 are correct if angle-invariant algorithm applied.
 
 # Conclusion
 YOLOv8s is better than YOLOv8n.
