@@ -116,7 +116,7 @@ And predict those images.
 
 And merge those four results into one.
 
-In merging process, two bounding boxes of IOU >= 0.4 is considered as the same object.
+In merging process, two bounding boxes of IOU > 0.4 is considered as the same object.
 
 Detail is implemented in `rotational_invariance_pred.py`, in about 480 lines.
 

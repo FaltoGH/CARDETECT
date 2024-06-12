@@ -14,18 +14,6 @@ assets = os.path.join(dirname, "images")
 assets_list = os.listdir(assets)
 model_path = os.path.join(dirname, "yolov8s_playing_cards.pt")
 
-def timing(f):
-    @wraps(f)
-    def wrap(*args, **kw):
-        ts = time.time()
-        result = f(*args, **kw)
-        te = time.time()
-        ms = (te-ts)*1000
-        name = f.__name__
-        print('function %s took %dms.' % (name, ms))
-        return result
-    return wrap
-
 def classic_predict(yolo:YOLO, im:MatLike) -> Results:
     results = yolo(im)
     assert len(results) == 1
@@ -114,15 +102,6 @@ def get_xywh(box:Boxes) -> list:
     ret = [*map(float, box.xywh[0])]
     
     assert len(ret) == 4
-
-    if ret[2] < 0:
-        ret[0] = ret[0] + ret[2]
-        ret[2] = -ret[2]
-    
-    if ret[3] < 0:
-        ret[1] = ret[1] + ret[3]
-        ret[3] = -ret[3]
-
     for i in ret:
         assert i >= 0
 
@@ -177,7 +156,6 @@ def argmax(d:dict) -> int:
     assert ret != -1
     return ret
 
-@timing
 def extract_best(parent:list, boxes:Boxes) -> Boxes:
     """
     Returns the best boxes.
@@ -331,6 +309,9 @@ def rotate_row(row:Tensor, orig_shape:tuple) -> None:
     row[2] = c
     row[3] = d
 
+    assert a <= c
+    assert b <= d
+
 
 def rotate_data(data:Tensor, orig_shape:tuple) -> Tensor:
     """
@@ -375,13 +356,11 @@ def merge_results(results:list) -> Results:
 
     return ret
 
-@timing
 def get_merged_result(yolo:YOLO, im:MatLike) -> Results:
     results = get_four_results(yolo, im)
     ret = merge_results(results)
     return ret
 
-@timing
 def union_boxes(boxes:Boxes) -> list:
     """
     Union boxes whose IOU is greater than 0.4.
@@ -445,7 +424,7 @@ def show_result(result:Results) -> None:
     if key == ord("q"):
         return 1
 
-def predict_rotational_invariance(yolo:YOLO, im:MatLike) -> Results:
+def pred(yolo:YOLO, im:MatLike) -> Results:
     result = get_merged_result(yolo, im)
     parent = union_boxes(result.boxes)
     result.boxes = extract_best(parent, result.boxes)
@@ -470,7 +449,7 @@ if __name__ == "__main__":
         im = cv2.imread(abspath)
         print("cv2.imread done")
         
-        result = predict_rotational_invariance(yolo, im)
+        result = pred(yolo, im)
         result.save(os.path.join(assets, asset+"_r_pred.jpg"))
 
         if show_result(result) != 0:
