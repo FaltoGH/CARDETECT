@@ -75,31 +75,13 @@ def get_intersection_length(a:float,b:float,c:float,d:float)->float:
 
     return ret
 
-def get_intersection_area2(x0:float,y0:float,w0:float,h0:float,x1:float,y1:float,w1:float,h1:float) -> float:
-
-    if w0 < 0:
-        raise AssertionError("w0=%f"%w0)
-    
-    if h0 < 0:
-        raise AssertionError("h0=%f"%h0)
-    
-    if w1 < 0:
-        raise AssertionError("w1=%f"%w1)
-    
-    if h1 < 0:
-        raise AssertionError("h1=%f"%h1)
-
-    xl = get_intersection_length(x0,x0+w0,x1,x1+w1)
-    yl = get_intersection_length(y0,y0+h0,y1,y1+h1)
-
+def get_intersection_area(xyxy0:list, xyxy1:list) -> float:
+    xl = get_intersection_length(xyxy0[0], xyxy0[2], xyxy1[0], xyxy1[2])
+    yl = get_intersection_length(xyxy0[1], xyxy0[3], xyxy1[1], xyxy1[3])
     return xl * yl
 
-def get_intersection_area(xywh0:tuple, xywh1:tuple) -> float:
-    return get_intersection_area2(xywh0[0], xywh0[1], xywh0[2], xywh0[3], xywh1[0], xywh1[1], xywh1[2], xywh1[3])
-
-
-def get_xywh(box:Boxes) -> list:
-    ret = [*map(float, box.xywh[0])]
+def get_xyxy(box:Boxes) -> list:
+    ret = [*map(float, box.xyxy[0])]
     
     assert len(ret) == 4
     for i in ret:
@@ -107,15 +89,24 @@ def get_xywh(box:Boxes) -> list:
 
     return ret
 
-def get_xywh_IOU(xywh0:tuple, xywh1:tuple) -> float:
+def get_area(xyxy:list)->float:
+    w = xyxy[2] - xyxy[0]
+    h = xyxy[3] - xyxy[1]
+    assert w > 0
+    assert h > 0
+    ret = w * h
+    assert ret > 0
+    return ret
+
+def get_xyxy_IOU(xyxy0:list, xyxy1:list) -> float:
     """
     Returns real number that belongs to interval [0, 1].
     """
-    ia = get_intersection_area(xywh0, xywh1)
-    ua = xywh0[2] * xywh0[3] + xywh1[2] * xywh1[3] - ia
 
-    if ua == 0:
-        return 0
+    ia = get_intersection_area(xyxy0, xyxy1)
+    ua = get_area(xyxy0) + get_area(xyxy1) - ia
+
+    assert ua > 0
 
     ret =  ia / ua
 
@@ -368,15 +359,15 @@ def union_boxes(boxes:Boxes) -> list:
     """
     n = boxes.shape[0]
     parent = [*range(n)]
-    xywhs = tuple(map(get_xywh, boxes))
+    xyxys = tuple(map(get_xyxy, boxes))
 
     for i in range(n-1):
         for j in range(i+1, n):
 
-            xywh0 = xywhs[i]
-            xywh1 = xywhs[j]
+            a = xyxys[i]
+            b = xyxys[j]
 
-            iou = get_xywh_IOU(xywh0, xywh1)
+            iou = get_xyxy_IOU(a,b)
             if iou > 0.4:
                 union(parent, i, j)
     

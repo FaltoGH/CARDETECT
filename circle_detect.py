@@ -17,15 +17,6 @@ assets = os.path.join(dirname, "images")
 assets_list = os.listdir(assets)
 model_path = os.path.join(dirname, "yolov8s_playing_cards.pt")
 
-def get_xywh(box:Boxes) -> list:
-    ret = [*map(float, box.xywh[0])]
-    
-    assert len(ret) == 4
-    for i in ret:
-        assert i >= 0
-
-    return ret
-
 def get_xyxy(box:Boxes) -> list:
     ret = [*map(float, box.xyxy[0])]
     
