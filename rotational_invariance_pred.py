@@ -1,12 +1,19 @@
+import cv2
 from cv2.typing import MatLike
+
 import numpy as np
-from torch import Tensor
+
 import torch
+from torch import Tensor
+
+import ultralytics
 from ultralytics import YOLO
 from ultralytics.engine.results import Results, Boxes
+
 import os
-import cv2
 import time
+
+import functools
 from functools import wraps
 
 dirname = os.path.dirname(__file__)
@@ -352,13 +359,24 @@ def get_merged_result(yolo:YOLO, im:MatLike) -> Results:
     ret = merge_results(results)
     return ret
 
-def union_boxes(boxes:Boxes) -> list:
+def union_boxes(boxes:Boxes, standard:float=0.45) -> list:
     """
-    Union boxes whose IOU is greater than 0.4.
+    Union boxes whose IOU is greater than standard.
     Returns parent array.
+
+    Union operation can be performed only once per each box.
+    That means, chained boxes should not be considered as one object,
+    like the situation (  [ )  { ]  < }  >
     """
+
+    if standard >= 1:
+        return
+
     n = boxes.shape[0]
     parent = [*range(n)]
+
+    unioned = [False] * n
+
     xyxys = tuple(map(get_xyxy, boxes))
 
     for i in range(n-1):
@@ -368,8 +386,13 @@ def union_boxes(boxes:Boxes) -> list:
             b = xyxys[j]
 
             iou = get_xyxy_IOU(a,b)
-            if iou > 0.4:
-                union(parent, i, j)
+            if iou > standard:
+
+                # if i has not been unioned, it can be unioned with another box.
+                if not unioned[i]:
+
+                    union(parent, i, j)
+                    unioned[i] = True
     
     for i in range(n):
         parent[i] = find(parent, i)
@@ -421,29 +444,16 @@ def pred(yolo:YOLO, im:MatLike) -> Results:
     result.boxes = extract_best(parent, result.boxes)
     return result
 
-if __name__ == "__main__":
-    print("main start")
-
-    torch.set_printoptions(sci_mode=False)
-    print("set_printoptions done")
-
+def main():
     yolo = YOLO(model_path)
-    print("initialize YOLO done")
-
-    for asset in assets_list:
-
-        if "pred" in asset: continue
-        if asset != "0.jpg": continue
-
-        abspath = os.path.join(assets, asset)
-
-        im = cv2.imread(abspath)
-        print("cv2.imread done")
-        
-        result = pred(yolo, im)
-        result.save(os.path.join(assets, asset+"_r_pred.jpg"))
-
-        if show_result(result) != 0:
-            break
-        
+    abspath = os.path.join(assets, "0.jpg")
+    im = cv2.imread(abspath)
+    result = pred(yolo, im)
+    boxes = result.boxes
+    print("boxes.shape=", boxes.shape)
+    result.save(os.path.join(assets, "0.jpg_r_pred.jpg"))
+    show_result(result)
     cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()

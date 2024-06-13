@@ -66,41 +66,48 @@ def main(argc:int, argv:list[str]):
         show_result(result)
 
         boxes = result.boxes
+        print("boxes.shape=", boxes.shape)
+
         orig_img = result.orig_img
 
-        while True:
+        writedir = os.path.join(dirname, "crop_images")
+        if not os.path.isdir(writedir):
+            os.mkdir(writedir)
 
-            line = sys.stdin.readline()
-            param2 = int(line)
+        i = 0
 
-            for box in boxes:
-                xyxy = get_xyxy(box)
-                crop_img = orig_img[int(xyxy[1]):math.ceil(xyxy[3]), int(xyxy[0]):math.ceil(xyxy[2])]
+        for box in boxes:
+            xyxy = get_xyxy(box)
+            crop_img = orig_img[int(xyxy[1]):math.ceil(xyxy[3]), int(xyxy[0]):math.ceil(xyxy[2])]
 
-                #https://docs.opencv.org/3.4/d4/d70/tutorial_hough_circle.html
-                # Convert it to gray
-                gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(os.path.join(writedir, "%d.jpg"%i), crop_img)
 
-                # Reduce the noise to avoid false circle detection
-                gray = cv2.medianBlur(gray, 5)
+            #https://docs.opencv.org/3.4/d4/d70/tutorial_hough_circle.html
+            # Convert it to gray
+            gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
 
-                circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 1, param1=200, param2=param2, minRadius=1, maxRadius=0)
-                print("circles=", circles)
+            # Reduce the noise to avoid false circle detection
+            gray = cv2.medianBlur(gray, 5)
 
-                if circles is not None:
-                    circles = np.uint16(np.around(circles))
+            circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 1, param1=200, param2=50, minRadius=1, maxRadius=0)
+            print("circles=", circles)
 
-                    for i in circles[0, :]:
-                        center = (i[0], i[1])
+            if circles is not None:
+                circles = np.uint16(np.around(circles))
 
-                        # circle center
-                        cv2.circle(crop_img, center, 1, (0, 100, 100), 3)
+                for i in circles[0, :]:
+                    center = (i[0], i[1])
 
-                        # circle outline
-                        radius = i[2]
-                        cv2.circle(crop_img, center, radius, (255, 0, 255), 3)
+                    # circle center
+                    cv2.circle(crop_img, center, 1, (0, 100, 100), 3)
 
-                imshow(crop_img)
+                    # circle outline
+                    radius = i[2]
+                    cv2.circle(crop_img, center, radius, (255, 0, 255), 3)
+
+            imshow(crop_img)
+
+            i += 1
         
     cv2.destroyAllWindows()
     return 0
