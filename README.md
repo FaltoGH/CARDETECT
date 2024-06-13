@@ -128,6 +128,7 @@ Algorithm `confine` is pretty simple.
 
 If YOLOv8 has detected `7` but there is a confined space in the image, it is considered that YOLOv8 misdetected 9 as 7. The basic idea is that 7 has no circle but 9 has.
 
+![image](/crop_images/14.jpg)
 ![image](/images/9H.png)
 
 The algorithm to determine if there exists any confined space is implemented in `confine.py`, in about 180 lines.
