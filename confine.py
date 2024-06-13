@@ -151,6 +151,11 @@ def confine(mat:MatLike) -> tuple[int, MatLike]:
     
     return (0, mat)
 
+def is_there_any_confined_space(mat:MatLike) -> bool:
+    pre = preprocess(mat)
+    area, mat = confine(pre)
+    return area > 0
+
 def main():
     for asset in assets_list:
 

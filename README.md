@@ -1,4 +1,4 @@
-# YOLO-CARD-DETECT (incomplete)
+# YOLOv8-Playing-Card-Detect (incomplete)
 
 ## YOLOv8n
 YOLOv8n train result:
@@ -106,8 +106,7 @@ YOLOv8s performance result is better than YOLOv8n's.
 
 So I decided to use YOLOv8s.
 
-## Rotational Invariance Predict
-
+## Rotational Invariance Prediction (RIP)
 Rotational invariance algorithm is pretty simple.
 
 Just rotate a image for 0, 90, 180, and 270 degree respectively.
@@ -123,3 +122,20 @@ Detail is implemented in `rotational_invariance_pred.py`, in about 480 lines.
 Following is the prediction result.
 
 ![image](/images/0.jpg_r_pred.jpg)
+
+## Confine
+Algorithm `confine` is pretty simple.
+
+If YOLOv8 has detected `7` but there is a confined space in the image, it is considered that YOLOv8 misdetected 9 as 7. The basic idea is that 7 has no circle but 9 has.
+
+![image](/images/9H.png)
+
+The algorithm to determine if there exists any confined space is implemented in `confine.py`, in about 180 lines.
+
+## Rotational Invariance Prediction + Confine
+
+### Result
+![image](/images/0.jpg_rc_pred.jpg)
+
+### Limitation
+Confine algorithm cannot distinguish Q and 9, 4 and 6.
