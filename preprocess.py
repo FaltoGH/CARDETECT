@@ -1,62 +1,43 @@
 import os
-
-dirname = os.path.dirname(__file__)
-os.chdir(dirname)
-
-smodel=os.path.join(dirname, "runs", "detect", "train7", "weights", "best.pt")
-
-# if useyolo is False, only preprocessed image is shown.
-useyolo = True
-
-test=os.path.join(dirname, "images")
-
-if useyolo and not os.path.isfile(smodel):
-    raise FileNotFoundError(smodel)
-
-if not os.path.isdir(test):
-    raise FileNotFoundError(test)
-
 import cv2
+from cv2.typing import MatLike
 import numpy as np
 
-def preprocess(src):
-    # incomplete
-    return src
+DIRNAME = os.path.dirname(__file__)
+IMAGE_FILENAME = os.path.join(DIRNAME, "images", "0.jpg")
 
-def preprocess_ims():
-    for x in os.listdir(test):
-        if x.endswith(".jpg"):
-            abspath = os.path.join(test, x)
-            im = cv2.imread(abspath)
-            yield preprocess(im)
+def imshow(im:MatLike) -> int:
+    cv2.imshow("im", im)
+    return cv2.waitKey()
 
-if useyolo:
-    from ultralytics import YOLO
+def preprocess(src:MatLike) -> MatLike:
+    srcc = src.copy()
+    image_hsv = cv2.cvtColor(src, cv2.COLOR_BGR2HSV)
 
-    # Load the YOLOv8 model
-    model = YOLO(smodel)
+    # https://cvexplained.wordpress.com/2020/04/28/color-detection-hsv/#:~:text=non%20color%20pixels.-,Full%20code%20%3A,-1
 
-def predict(x):
-    if not useyolo:
-        cv2.imshow("Preprocess Result", x)
-        cv2.waitKey(0)
-        return
+    # lower boundary RED color range values; Hue (0 - 10)
+    lower1 = np.array([0, 100, 20])
+    upper1 = np.array([10, 255, 255])
+    
+    # upper boundary RED color range values; Hue (160 - 180)
+    lower2 = np.array([160,100,20])
+    upper2 = np.array([179,255,255])
+    
+    lower_mask = cv2.inRange(image_hsv, lower1, upper1)
+    upper_mask = cv2.inRange(image_hsv, lower2, upper2)
+    
+    full_mask = lower_mask + upper_mask
+    
+    mask_where = np.where(full_mask)
+    srcc[mask_where] = (0,0,255)
+    return srcc
 
-    # Run YOLOv8 inference on the frame
-    results = model(x)
-
-    for result in results:
-        # Visualize the results on the frame
-        annotated_frame = result.plot()
-
-        # Display the annotated frame
-        cv2.imshow("YOLOv8 Inference", annotated_frame)
-        cv2.waitKey(0)
+def main():
+    assert os.path.isfile(IMAGE_FILENAME)
+    src = cv2.imread(IMAGE_FILENAME)
+    pre = preprocess(src)
+    imshow(pre)
 
 if __name__ == "__main__":
-
-    for i in preprocess_ims():
-        predict(i)
-
-    # Close the display window
-    cv2.destroyAllWindows()
+    main()

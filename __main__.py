@@ -637,7 +637,7 @@ def test_predict_images() -> None:
         ricpredict(os.path.join(d, i)).show()
 
 def test_predict_webcam() -> None:
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     # Loop through the video frames
     while cap.isOpened():
@@ -654,7 +654,7 @@ def test_predict_webcam() -> None:
             # Display the annotated frame
             cv2.imshow("YOLOv8 Inference", annotated_frame)
 
-            wkey = cv2.waitKey(1) & 0xFF
+            wkey = cv2.waitKey(444) & 0xFF
 
             # Break the loop if 'q' is pressed
             if wkey == ORD_Q:
