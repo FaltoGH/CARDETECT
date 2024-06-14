@@ -1,9 +1,4 @@
-# license: unlicense
-# author: Falto
-# created: June 13th, 2024
-
-# This source file seems to be useless.
-# It does not detect any object on cropped images.
+# obsolete
 
 from rotational_invariance_pred import pred
 from ultralytics import YOLO
