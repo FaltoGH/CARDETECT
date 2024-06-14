@@ -13,7 +13,7 @@ def main():
     yolo = YOLO(model_path)
     abspath = os.path.join(assets, "0.jpg")
     im = cv2.imread(abspath)
-    result = util.four_direction_predict(yolo, im)
+    result = util.predict_v2(yolo, im)
     boxes = result.boxes
     print("boxes.shape=", boxes.shape)
     result.save(os.path.join(assets, "0.jpg_r_pred.jpg"))

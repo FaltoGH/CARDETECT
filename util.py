@@ -1,4 +1,9 @@
+# June 15th, 2024
+
 import math
+import os
+from typing import Union, Callable
+
 import skimage
 from torch import Tensor
 import torch
@@ -8,11 +13,11 @@ import numpy as np
 import cv2
 from cv2.typing import MatLike
 
+DIRNAME = os.path.dirname(__file__)
 BLACK = 0
 WHITE = 255
 GRAY = 180
 ESC = 40
-
 DX=(0,0,1,-1)
 DY=(1,-1,0,0)
 ORD_Q = ord('q')
@@ -72,7 +77,7 @@ def get_crop_img(result:Results, box:Boxes)->MatLike:
     crop_img = result.orig_img[int(xyxy[1]):math.ceil(xyxy[3]), int(xyxy[0]):math.ceil(xyxy[2])]
     return crop_img
 
-def classic_predict(yolo:YOLO, im:MatLike) -> Results:
+def predict_v1(yolo:YOLO, im:MatLike) -> Results:
     results = yolo(im)
     assert len(results) == 1
     result = results[0]
@@ -298,7 +303,7 @@ def get_four_results(yolo:YOLO, im:MatLike) -> list:
     results = [0]*4
 
     for i in range(4):
-        result = classic_predict(yolo, im)
+        result = predict_v1(yolo, im)
         results[i] = result
 
         # Do not rotate at last epoch.
@@ -462,7 +467,7 @@ def rotate_result(result:Results) -> int:
     result.boxes = rotate_boxes(result.boxes)
     return 0
 
-def four_direction_predict(yolo:YOLO, im:MatLike) -> Results:
+def predict_v2(yolo:YOLO, im:MatLike) -> Results:
     result = get_merged_result(yolo, im)
     parent = union_boxes(result.boxes)
     result.boxes = extract_best(parent, result.boxes)
@@ -593,3 +598,119 @@ def is_there_any_confined_space(mat:MatLike) -> bool:
     pre = thresh(mat)
     area, mat = confine(pre)
     return area > 0
+
+def predict_v3(yolo:YOLO, im:MatLike) -> Results:
+    result = predict_v2(yolo, im)
+    boxes = result.boxes
+    datac = boxes.data.clone()
+    boxidx = 0
+    for box in boxes:
+        name = get_cls_name(result, box)
+        if "7" in name:
+            crop_img = get_crop_img(result, box)
+            is_confined = is_there_any_confined_space(crop_img)
+            if is_confined:
+
+                # Make box class name contain "9"
+                # Set class
+                datac[boxidx, -1] = int(datac[boxidx, -1]) + 8
+        
+        boxidx += 1
+    result.boxes = Boxes(datac, result.orig_shape)
+    return result
+
+def predict_v3a(yolo:YOLO, source:Union[str, MatLike]) -> Results:
+    if isinstance(source, str):
+        source = cv2.imread(source)
+    return predict_v3(yolo, source)
+
+def mask_red(src:MatLike) -> MatLike:
+    srcc = src.copy()
+    image_hsv = cv2.cvtColor(src, cv2.COLOR_BGR2HSV)
+
+    # https://cvexplained.wordpress.com/2020/04/28/color-detection-hsv/#:~:text=non%20color%20pixels.-,Full%20code%20%3A,-1
+
+    # lower boundary RED color range values; Hue (0 - 10)
+    lower1 = np.array([0, 100, 20])
+    upper1 = np.array([10, 255, 255])
+    
+    # upper boundary RED color range values; Hue (160 - 180)
+    lower2 = np.array([160,100,20])
+    upper2 = np.array([179,255,255])
+    
+    lower_mask = cv2.inRange(image_hsv, lower1, upper1)
+    upper_mask = cv2.inRange(image_hsv, lower2, upper2)
+    
+    full_mask = lower_mask + upper_mask
+    
+    mask_where = np.where(full_mask)
+    srcc[mask_where] = (0,0,255)
+    return srcc
+
+def test_cam(yolo:YOLO, predict:Callable) -> None:
+    """
+    YOLO yolo; // YOLOv8 model instance.
+
+    Results predict(YOLO, MatLike); // A function that returns Results.
+    """
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+    # Loop through the video frames
+    while cap.isOpened():
+        # Read a frame from the video
+        success, frame = cap.read()
+
+        if success:
+            # Run YOLOv8 inference on the frame
+            result = predict(yolo, frame)
+
+            # Visualize the results on the frame
+            annotated_frame = result.plot()
+
+            # Display the annotated frame
+            cv2.imshow("YOLOv8 Inference", annotated_frame)
+
+            wkey = cv2.waitKey(444) & 0xFF
+
+            # Break the loop if 'q' is pressed
+            if wkey == ORD_Q:
+                break
+            
+            # Pause the loop if 'p' is pressed
+            if wkey == ord("p"):
+                cv2.waitKey()
+
+        else:
+            # Break the loop if the end of the video is reached
+            break
+
+    # Release the video capture object and close the display window
+    cap.release()
+    cv2.destroyAllWindows()
+
+def new_yolo(model=None) -> YOLO:
+    if model == None:
+        model = os.path.join(DIRNAME, "yolov8s_playing_cards.pt")
+    
+        if not os.path.isfile(model):
+            model = os.path.join(DIRNAME, "yolov8_playing_card_detect", "yolov8s_playing_cards.pt")
+
+            if not os.path.isfile(model):
+                model = None
+
+    yolo = YOLO(model)
+    return yolo
+
+def test_im(yolo:YOLO, predict:Callable, source:Union[str, MatLike]=None) -> int:
+    if source == None:
+        source = os.path.join(DIRNAME, "images", "0.jpg")
+        
+        if not os.path.isfile(source):
+            source = None
+    
+    if isinstance(source, str):
+        source = cv2.imread(source)
+    
+    result = predict(yolo, source)
+    return show_result(result)
+    

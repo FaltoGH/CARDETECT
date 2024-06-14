@@ -2,29 +2,29 @@
 
 ## YOLOv8n
 YOLOv8n train result:
-![image](/runs/detect/train/results.png)
+![image](runs/detect/train/results.png)
 
 ## Experiment results
 - Missing box, additional box, or not matched label are counted as one wrong.
 - Otherwise, it is counted as one correct.
 
 Predict result:
-![image](/images/0.jpg_pred.jpg)
+![image](images/0.jpg_pred.jpg)
 - Correct: 12
 - Wrong: 9
 
 Clockwise 90 result:
-![image](/images/1.jpg_pred.jpg)
+![image](images/1.jpg_pred.jpg)
 - Correct: 9
 - Wrong: 12
 
 Clockwise 180 result:
-![image](/images/2.jpg_pred.jpg)
+![image](images/2.jpg_pred.jpg)
 - Correct: 7
 - Wrong: 14
 
 Clockwise 270 result:
-![image](/images/3.jpg_pred.jpg)
+![image](images/3.jpg_pred.jpg)
 - Correct: 10
 - Wrong: 11
 
@@ -60,22 +60,22 @@ With 10 epochs for each experiments
 | [yolov8s](https://drive.google.com/file/d/1AqZnW6dI6flFZvGxAn6A9apDNSviXZ5f/view?usp=share_link) | 0.99498 | 0.95681 | 22.0MB |
 
 Predict result:
-![image](/images/0.jpg_s_pred.jpg)
+![image](images/0.jpg_s_pred.jpg)
 - Correct: 17
 - Wrong: 4
 
 Clockwise 90 result:
-![image](/images/1.jpg_s_pred.jpg)
+![image](images/1.jpg_s_pred.jpg)
 - Correct: 16
 - Wrong: 4
 
 Clockwise 180 result:
-![image](/images/2.jpg_s_pred.jpg)
+![image](images/2.jpg_s_pred.jpg)
 - Correct: 16
 - Wrong: 4
 
 Clockwise 270 result:
-![image](/images/3.jpg_s_pred.jpg)
+![image](images/3.jpg_s_pred.jpg)
 - Correct: 14
 - Wrong: 7
 
@@ -121,22 +121,22 @@ Detail is implemented in `rotational_invariance_pred.py`, in about 480 lines.
 
 Following is the prediction result.
 
-![image](/images/0.jpg_r_pred.jpg)
+![image](images/0.jpg_r_pred.jpg)
 
 ## Confine
 Algorithm `confine` is pretty simple.
 
 If YOLOv8 has detected `7` but there is a confined space in the image, it is considered that YOLOv8 misdetected 9 as 7. The basic idea is that 7 has no circle but 9 has.
 
-![image](/crop_images/14.jpg)
-![image](/images/9H.png)
+![image](crop_images/14.jpg)
+![image](images/9H.png)
 
 The algorithm to determine if there exists any confined space is implemented in `confine.py`, in about 180 lines.
 
 ## Rotational Invariance Prediction + Confine
 
 ### Result
-![image](/images/0.jpg_rc_pred.jpg)
+![image](images/0.jpg_rc_pred.jpg)
 
 ### Limitation
 Confine algorithm cannot distinguish Q and 9, 4 and 6.
