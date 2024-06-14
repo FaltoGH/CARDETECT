@@ -647,7 +647,47 @@ def mask_red(src:MatLike) -> MatLike:
     srcc[mask_where] = (0,0,255)
     return srcc
 
-def test_cam(yolo:YOLO, predict:Callable) -> None:
+def do_cam(f:Callable[[MatLike], int], index:int=0, apiPreference:int=cv2.CAP_DSHOW) -> None:
+    cap = cv2.VideoCapture(index, apiPreference)
+
+    # Loop through the video frames
+    while cap.isOpened():
+        # Read a frame from the video
+        success, frame = cap.read()
+
+        if success:
+            if f(frame): break
+
+        else:
+            # Break the loop if the end of the video is reached
+            break
+
+    # Release the video capture object and close the display window
+    cap.release()
+    cv2.destroyAllWindows()
+
+def test_mask_red_cam() -> None:
+    def f(frame):
+        result = mask_red(frame)
+
+        # Display the annotated frame
+        cv2.imshow(test_mask_red_cam.__qualname__, result)
+
+        wkey = cv2.waitKey(444) & 0xFF
+
+        # Break the loop if 'q' is pressed
+        if wkey == ORD_Q:
+            return 1
+        
+        # Pause the loop if 'p' is pressed
+        if wkey == ord("p"):
+            cv2.waitKey()
+        
+        return 0
+    
+    do_cam(f)
+
+def test_cam(yolo:YOLO, predict:Callable[[YOLO, MatLike], Results]) -> None:
     """
     YOLO yolo; // YOLOv8 model instance.
 
@@ -701,7 +741,7 @@ def new_yolo(model=None) -> YOLO:
     yolo = YOLO(model)
     return yolo
 
-def test_im(yolo:YOLO, predict:Callable, source:Union[str, MatLike]=None) -> int:
+def test_im(yolo:YOLO, predict:Callable[[YOLO, MatLike], Results], source:Union[str, MatLike]=None) -> int:
     if source == None:
         source = os.path.join(DIRNAME, "images", "0.jpg")
         
@@ -713,4 +753,8 @@ def test_im(yolo:YOLO, predict:Callable, source:Union[str, MatLike]=None) -> int
     
     result = predict(yolo, source)
     return show_result(result)
-    
+
+def predict_v4(yolo:YOLO, mat:MatLike):
+    mat = mask_red(mat)
+    return predict_v3a(yolo, mat)
+
