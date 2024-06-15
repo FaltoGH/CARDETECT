@@ -56,7 +56,7 @@ def thresh(im:MatLike, blurksize=5, maxpool=True) -> np.ndarray:
 
     if maxpool:
         ret = skimage.measure.block_reduce(ret, (2,2), np.max)
-        
+
     return ret
 
 def mov_start(mat:MatLike, start:list) -> int:
@@ -204,7 +204,7 @@ def do_cam(f:Callable[[MatLike], int], index:int=0, apiPreference:int=cv2.CAP_DS
     cv2.destroyAllWindows()
     return ret
 
-def do_cam_mask(mask_func:Callable[[MatLike], MatLike]):
+def do_cam2(mask_func:Callable[[MatLike], MatLike]):
     def f(frame):
         result = mask_func(frame)
 
@@ -238,4 +238,4 @@ def imread(source:Union[str, MatLike]=None):
 def do_mask(mask_func:Callable[[MatLike], MatLike]):
     im = imread()
     imshow(mask_func(im))
-    do_cam_mask(mask_func)
+    do_cam2(mask_func)
