@@ -39,7 +39,7 @@ def rotate(orig_img:MatLike) -> MatLike:
     return cv2.rotate(orig_img, cv2.ROTATE_90_CLOCKWISE)
 
 
-def thresh(im:MatLike) -> np.ndarray:
+def thresh(im:MatLike, blurksize=5, maxpool=True) -> np.ndarray:
     """
     Preprocess an predict cropped box image.
     Suit and rank part is denoted as 255 (white).
@@ -49,10 +49,14 @@ def thresh(im:MatLike) -> np.ndarray:
     ret = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
     # Reduce the noise to avoid false detection
-    ret = cv2.medianBlur(ret, 5)
+    if blurksize > 0:
+        ret = cv2.medianBlur(ret, 5)
 
     ret = cv2.threshold(ret, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-    ret = skimage.measure.block_reduce(ret, (2,2), np.max)
+
+    if maxpool:
+        ret = skimage.measure.block_reduce(ret, (2,2), np.max)
+        
     return ret
 
 def mov_start(mat:MatLike, start:list) -> int:
@@ -205,9 +209,7 @@ def do_cam_mask(mask_func:Callable[[MatLike], MatLike]):
         result = mask_func(frame)
 
         # Display the annotated frame
-        cv2.imshow("test_mask_cam", result)
-
-        wkey = cv2.waitKey(444) & 0xFF
+        wkey = imshow(result, 444)
 
         # Break the loop if 'q' is pressed
         if wkey == ord('q'):
