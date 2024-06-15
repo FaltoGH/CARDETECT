@@ -666,12 +666,29 @@ def do_cam(f:Callable[[MatLike], int], index:int=0, apiPreference:int=cv2.CAP_DS
     cap.release()
     cv2.destroyAllWindows()
 
-def test_mask_red_cam() -> None:
+def new_yolo(model=None) -> YOLO:
+    if model == None:
+        model = os.path.join(DIRNAME, "yolov8s_playing_cards.pt")
+    
+        if not os.path.isfile(model):
+            model = os.path.join(DIRNAME, "yolov8_playing_card_detect", "yolov8s_playing_cards.pt")
+
+            if not os.path.isfile(model):
+                model = None
+
+    yolo = YOLO(model)
+    return yolo
+
+def predict_v4(yolo:YOLO, mat:MatLike):
+    mat = mask_red(mat)
+    return predict_v3a(yolo, mat)
+
+def test_red_mask_cam() -> None:
     def f(frame):
         result = mask_red(frame)
 
         # Display the annotated frame
-        cv2.imshow(test_mask_red_cam.__qualname__, result)
+        cv2.imshow("test_red_mask_cam", result)
 
         wkey = cv2.waitKey(444) & 0xFF
 
@@ -687,61 +704,40 @@ def test_mask_red_cam() -> None:
     
     do_cam(f)
 
-def test_cam(yolo:YOLO, predict:Callable[[YOLO, MatLike], Results]) -> None:
+def test_yolo_cam(yolo:YOLO, predict:Callable[[YOLO, MatLike], Results]) -> None:
     """
     YOLO yolo; // YOLOv8 model instance.
 
     Results predict(YOLO, MatLike); // A function that returns Results.
     """
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    def f(frame):
+        # Run YOLOv8 inference on the frame
+        result = predict(yolo, frame)
 
-    # Loop through the video frames
-    while cap.isOpened():
-        # Read a frame from the video
-        success, frame = cap.read()
+        # Visualize the results on the frame
+        annotated_frame = result.plot()
 
-        if success:
-            # Run YOLOv8 inference on the frame
-            result = predict(yolo, frame)
+        # Display the annotated frame
+        cv2.imshow("YOLOv8 Inference", annotated_frame)
 
-            # Visualize the results on the frame
-            annotated_frame = result.plot()
+        wkey = cv2.waitKey(444) & 0xFF
 
-            # Display the annotated frame
-            cv2.imshow("YOLOv8 Inference", annotated_frame)
+        # Break the loop if 'q' is pressed
+        if wkey == ORD_Q:
+            return 1
+        
+        # Pause the loop if 'p' is pressed
+        if wkey == ord("p"):
+            cv2.waitKey()
+        return 0
 
-            wkey = cv2.waitKey(444) & 0xFF
+    do_cam(f)
 
-            # Break the loop if 'q' is pressed
-            if wkey == ORD_Q:
-                break
-            
-            # Pause the loop if 'p' is pressed
-            if wkey == ord("p"):
-                cv2.waitKey()
+def test_predict4(yolo:YOLO):
+    test_yolo_im(yolo, predict_v4)
+    test_yolo_cam(yolo, predict_v4)
 
-        else:
-            # Break the loop if the end of the video is reached
-            break
-
-    # Release the video capture object and close the display window
-    cap.release()
-    cv2.destroyAllWindows()
-
-def new_yolo(model=None) -> YOLO:
-    if model == None:
-        model = os.path.join(DIRNAME, "yolov8s_playing_cards.pt")
-    
-        if not os.path.isfile(model):
-            model = os.path.join(DIRNAME, "yolov8_playing_card_detect", "yolov8s_playing_cards.pt")
-
-            if not os.path.isfile(model):
-                model = None
-
-    yolo = YOLO(model)
-    return yolo
-
-def test_im(yolo:YOLO, predict:Callable[[YOLO, MatLike], Results], source:Union[str, MatLike]=None) -> int:
+def test_yolo_im(yolo:YOLO, predict:Callable[[YOLO, MatLike], Results], source:Union[str, MatLike]=None) -> int:
     if source == None:
         source = os.path.join(DIRNAME, "images", "0.jpg")
         
@@ -754,7 +750,8 @@ def test_im(yolo:YOLO, predict:Callable[[YOLO, MatLike], Results], source:Union[
     result = predict(yolo, source)
     return show_result(result)
 
-def predict_v4(yolo:YOLO, mat:MatLike):
-    mat = mask_red(mat)
-    return predict_v3a(yolo, mat)
+if __name__ == "__main__":
+    # Insert your test code below
 
+    yolo = new_yolo()
+    test_predict4(yolo)
